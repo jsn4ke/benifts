@@ -10,7 +10,8 @@
       "Bash(source:*)",
       "Bash(mkdir:*)",
       "Bash(python3:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(venv/Scripts/python:*)"
     ]
   }
 }

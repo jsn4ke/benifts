@@ -2,5 +2,6 @@
 
 from .base import BaseScraper
 from .cmb import CMBScraper
+from .shbank import SHBankScraper
 
-__all__ = ["BaseScraper", "CMBScraper"]
+__all__ = ["BaseScraper", "CMBScraper", "SHBankScraper"]
