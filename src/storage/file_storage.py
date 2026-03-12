@@ -102,6 +102,9 @@ class FileStorage:
                 code TEXT NOT NULL,
                 bank TEXT NOT NULL,
                 product_type TEXT,
+                sale_type TEXT,
+                fund_type TEXT,
+                issuer TEXT,
                 risk_level TEXT,
                 status TEXT,
                 net_value REAL,
@@ -122,16 +125,20 @@ class FileStorage:
             data = product.to_dict()
             cursor.execute("""
                 INSERT INTO products (
-                    name, code, bank, product_type, risk_level, status,
+                    name, code, bank, product_type, sale_type, fund_type,
+                    issuer, risk_level, status,
                     net_value, currency, min_amount, investor_scope,
                     fee_standard, fee_method, notice_url, filing_number,
                     fetch_time, source
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 data["name"],
                 data["code"],
                 data["bank"],
                 data["product_type"],
+                data["sale_type"],
+                data["fund_type"],
+                data["issuer"],
                 data["risk_level"],
                 data["status"],
                 data["net_value"],

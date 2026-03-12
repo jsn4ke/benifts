@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(python:*)",
+      "Bash(./venv/Scripts/pip install:*)",
+      "Bash(./venv/Scripts/pytest:*)",
+      "Bash(./venv/Scripts/python:*)",
+      "Bash(source:*)",
+      "Bash(mkdir:*)",
+      "Bash(python3:*)",
+      "Bash(sed:*)"
     ]
   }
 }
