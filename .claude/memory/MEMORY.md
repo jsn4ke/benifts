@@ -10,22 +10,33 @@
 
 **当前迭代**: `plan0.1.0.md`
 
-**当前阶段**: 初始化阶段
+**当前阶段**: Phase 2 - 招行数据获取
 
 **进行中的任务**:
-- [ ] 创建 Python 虚拟环境
-- [ ] 分析招行页面数据获取方式
-- [ ] 编写基础爬虫框架
+- [ ] 分析招行页面网络请求
+- [ ] 编写招行爬虫实现 (src/scrapers/cmb.py)
+- [ ] 测试数据获取功能
 
 ---
 
 ## 已完成功能 (Completed Features)
+
+### Phase 1 - 项目初始化 (100%)
 
 - [x] 项目规则文件创建
 - [x] 会话恢复系统搭建
 - [x] .gitignore 文件创建
 - [x] 招行理财产品页面调研
 - [x] 初始计划 plan0.1.0.md 创建
+- [x] 分支开发流程规则添加
+- [x] Python 虚拟环境创建
+- [x] 基础依赖安装（requirements.txt）
+- [x] 项目目录结构创建（src/, tests/, data/）
+- [x] 基础爬虫类（BaseScraper）
+- [x] 产品数据模型（Product）
+- [x] 文件存储模块（FileStorage - CSV/JSON/SQLite）
+- [x] 单元测试（Product 模型 - 4 个测试，100% 通过）
+- [x] 代码提交并合并到 main
 
 ---
 
