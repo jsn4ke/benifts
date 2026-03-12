@@ -17,6 +17,9 @@ class Product:
     code: str
     bank: str
     product_type: Optional[str] = None
+    sale_type: Optional[str] = None  # 自有或代销
+    fund_type: Optional[str] = None  # 公募或私募
+    issuer: Optional[str] = None  # 发行机构
     risk_level: Optional[str] = None
 
     # 状态信息
