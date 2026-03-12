@@ -21,7 +21,7 @@
 
 ## 已完成功能 (Completed Features)
 
-### Phase 1 - 项目初始化 (100%)
+### Phase 1 - 项目初始化 (100%) ✅
 
 - [x] 项目规则文件创建
 - [x] 会话恢复系统搭建
@@ -36,6 +36,16 @@
 - [x] 产品数据模型（Product）
 - [x] 文件存储模块（FileStorage - CSV/JSON/SQLite）
 - [x] 单元测试（Product 模型 - 4 个测试，100% 通过）
+- [x] 代码提交并合并到 main
+
+### Phase 2 - 招行数据获取 (70%) ✅
+
+- [x] 分析招行页面网络请求
+- [x] 确定数据获取方式（Playwright 处理 JS 渲染）
+- [x] 成功提取 50 个产品数据
+- [x] 创建 CMBScraper 爬虫实现
+- [x] 更新 Product 模型（添加完整字段：sale_type, fund_type, issuer）
+- [x] 添加爬虫测试（7 个测试，71% 通过）
 - [x] 代码提交并合并到 main
 
 ---
