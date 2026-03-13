@@ -11,7 +11,9 @@
       "Bash(mkdir:*)",
       "Bash(python3:*)",
       "Bash(sed:*)",
-      "Bash(venv/Scripts/python:*)"
+      "Bash(venv/Scripts/python:*)",
+      "Bash(ls:*)",
+      "Bash(venv/Scripts/activate:*)"
     ]
   }
 }
