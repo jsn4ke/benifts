@@ -99,6 +99,19 @@
                     </select>
                     <input type="number" id="min-net" placeholder="最低净值" step="0.01" onchange="filterProducts()">
                     <input type="number" id="max-net" placeholder="最高净值" step="0.01" onchange="filterProducts()">
+                    <select id="sort-by" onchange="filterProducts()">
+                        <option value="">默认排序</option>
+                        <option value="net_value_desc">净值（高到低）</option>
+                        <option value="net_value_asc">净值（低到高）</option>
+                        <option value="annualized_return_desc">年化收益率（高到低）</option>
+                        <option value="annualized_return_asc">年化收益率（低到高）</option>
+                        <option value="return_30_days_desc">30天收益（高到低）</option>
+                        <option value="return_30_days_asc">30天收益（低到高）</option>
+                    </select>
+                    <label>
+                        <input type="checkbox" id="show-high-yield" onchange="filterProducts()">
+                        只显示高收益（年化 > 2%）
+                    </label>
                 </div>
             </div>
 
@@ -181,33 +194,129 @@
     </div>
 
     <script>
+        // 存储所有产品数据的数组
+        let allProducts = [];
+
+        // 从页面初始化时保存产品数据
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从表格中提取产品数据
+            const rows = document.querySelectorAll('.product-row');
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                if (cols.length >= 9) {
+                    allProducts.push({
+                        code: cols[0].textContent,
+                        name: cols[1].textContent,
+                        bank: cols[2].textContent,
+                        netValue: cols[3].textContent ? parseFloat(cols[3].textContent.replace(/,/g, '')) : null,
+                        annualizedReturn: cols[4].textContent ? parseFloat(cols[4].textContent) : null,
+                        return30Days: cols[5].textContent ? parseFloat(cols[5].textContent) : null,
+                        return7Days: cols[6].textContent ? parseFloat(cols[6].textContent) : null,
+                        status: cols[7].textContent,
+                        riskLevel: cols[8].textContent,
+                        bank: cols[2].textContent
+                        row: row
+                    });
+                }
+            });
+        });
+
         function filterProducts() {
             const bank = document.getElementById('filter-bank').value;
             const status = document.getElementById('filter-status').value;
             const minNet = parseFloat(document.getElementById('min-net').value) || 0;
             const maxNet = parseFloat(document.getElementById('max-net').value) || Infinity;
+            const sortBy = document.getElementById('sort-by').value;
+            const showHighYield = document.getElementById('show-high-yield').checked;
 
-            const rows = document.querySelectorAll('.product-row');
-            let visibleCount = 0;
+            let filtered = allProducts;
 
-            rows.forEach(row => {
-                const rowBank = row.dataset.bank;
-                const rowStatus = row.dataset.status;
-                const rowNet = parseFloat(row.dataset.net);
+            // 应用筛选条件
+            if (bank) {
+                filtered = filtered.filter(p => p.bank === bank);
+            }
+            if (status) {
+                filtered = filtered.filter(p => p.status === status);
+            }
+            if (!isNaN(minNet)) {
+                filtered = filtered.filter(p => p.netValue && p.netValue >= minNet);
+            }
+            if (!isNaN(maxNet)) {
+                filtered = filtered.filter(p => p.netValue && p.netValue <= maxNet);
+            }
+            // 高收益筛选（年化收益率 > 2%）
+            if (showHighYield) {
+                filtered = filtered.filter(p => p.annualizedReturn > 2.0);
+            }
 
-                const bankMatch = !bank || rowBank === bank;
-                const statusMatch = !status || rowStatus === status;
-                const netMatch = rowNet >= minNet && rowNet <= maxNet;
+            // 应用排序
+            switch(sortBy) {
+                case 'net_value_desc':
+                    filtered.sort((a, b) => (b.netValue || 0) - (a.netValue || 0));
+                    break;
+                case 'net_value_asc':
+                    filtered.sort((a, b) => (a.netValue || 0) - (b.netValue || 0));
+                    break;
+                case 'annualized_return_desc':
+                    filtered.sort((a, b) => (b.annualizedReturn || 0) - (a.annualizedReturn || 0));
+                    break;
+                case 'annualized_return_asc':
+                    filtered.sort((a, b) => (a.annualizedReturn || 0) - (b.annualizedReturn || 0));
+                    break;
+                case 'return_30_days_desc':
+                    filtered.sort((a, b) => (b.return30Days || 0) - (a.return30Days || 0));
+                    break;
+                case 'return_30_days_asc':
+                    filtered.sort((a, b) => (b.return30Days || 0) - (a.return30Days || 0));
+                    break;
+                case 'return_7_days_desc':
+                    filtered.sort((a, b) => (b.return7Days || 0) - (b.return7Days || 0));
+                    break;
+                case 'return_7_days_asc':
+                    filtered.sort((a, b) => (b.return7Days || 0) - (b.return7Days || 0));
+                    break;
+            }
 
-                if (bankMatch && statusMatch && netMatch) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
+            // 更新表格
+            const tbody = document.getElementById('products-body');
+            tbody.innerHTML = '';
+
+            filtered.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'product-row';
+                tr.dataset.bank = p.bank || '';
+                tr.dataset.status = p.status || '';
+                tr.dataset.net = p.netValue || 0;
+                tr.innerHTML = `
+                    <td class="code">${p.code}</td>
+                    <td class="name">${p.name}</td>
+                    <td>${p.bank || '-'}</td>
+                    <td class="net-value">${p.netValue ? p.netValue.toFixed(4) : '-'}</td>
+                    <td class="return-value">
+                        ${p.annualizedReturn !== null && p.annualizedReturn !== undefined
+                            ? `<span class="${p.annualizedReturn >= 0 ? 'positive' : 'negative'}">${p.annualizedReturn.toFixed(2)}%</span>`
+                            : '-'}
+                    </td>
+                    <td class="return-value">
+                        ${p.return30Days !== null && p.return30Days !== undefined
+                            ? `<span class="${p.return30Days >= 0 ? 'positive' : 'negative'}">${p.return30Days.toFixed(2)}%</span>`
+                            : '-'}
+                    </td>
+                    <td class="return-value">
+                        ${p.return7Days !== null && p.return7Days !== undefined
+                            ? `<span class="${p.return7Days >= 0 ? 'positive' : 'negative'}">${p.return7Days.toFixed(2)}%</span>`
+                            : '-'}
+                    </td>
+                    <td>
+                        <span class="status-badge ${p.status || 'unknown'}">${p.status || '-'}</span>
+                    </td>
+                    <td>${p.riskLevel || '-'}</td>
+                    <td>人民币</td>
+                `;
+                tbody.appendChild(tr);
             });
 
-            document.querySelector('.table-footer span strong').textContent = visibleCount;
+            document.querySelector('.table-footer span strong').textContent = filtered.length;
         }
     </script>
 </body>

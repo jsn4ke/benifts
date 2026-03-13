@@ -106,8 +106,8 @@ class CMBScraper(BaseScraper):
                         name = cols[0].get_text(strip=True)
                         code = cols[1].get_text(strip=True)
 
-                        # 只保留有效产品（有名称和代码）
-                        if name and code and len(code) > 3:
+                        # 保留所有有效产品（有名称和代码）
+                        if name and code and len(code) > 0:
                             product = {
                                 "name": name,
                                 "code": code,
