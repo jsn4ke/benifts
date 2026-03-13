@@ -11,6 +11,9 @@ numpy>=1.24.0
 # 数据可视化
 matplotlib>=3.7.0
 
+# Web 框架
+Flask>=3.0.0
+
 # 数据库
 # sqlite3 是 Python 内置，无需安装
 

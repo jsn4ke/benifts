@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误 - B2</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .error-page {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .error-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            font-size: 1.5em;
+            color: #dc2626;
+            margin-bottom: 20px;
+        }
+        .error-detail {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        .back-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .back-btn:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-page">
+            <div class="error-icon">❌</div>
+            <div class="error-message">出错了</div>
+            <div class="error-detail">{{ error }}</div>
+            <a href="/" class="back-btn">返回首页</a>
+        </div>
+    </div>
+</body>
+</html>

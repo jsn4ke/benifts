@@ -186,3 +186,66 @@ class FileStorage:
         products = [dict(row) for row in rows]
         logger.info(f"Loaded {len(products)} products from {filepath}")
         return products
+
+    def load_csv(self, filename: str = "products.csv") -> List[Product]:
+        """从 CSV 文件加载产品
+
+        Args:
+            filename: 文件名
+
+        Returns:
+            产品对象列表
+        """
+        filepath = self.processed_dir / filename
+
+        if not filepath.exists():
+            logger.warning(f"CSV file not found: {filepath}")
+            return []
+
+        products = []
+        with open(filepath, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    # 类型转换处理
+                    clean_row = {}
+                    for key, value in row.items():
+                        if value is None or value == '':
+                            clean_row[key] = None
+                        elif key in ('net_value', 'min_amount'):
+                            clean_row[key] = float(value) if value else None
+                        else:
+                            clean_row[key] = value
+                    products.append(Product(**clean_row))
+                except (TypeError, ValueError) as e:
+                    logger.warning(f"Failed to parse product: {e}")
+
+        logger.info(f"Loaded {len(products)} products from {filepath}")
+        return products
+
+    def load_json(self, filename: str = "products.json") -> List[Product]:
+        """从 JSON 文件加载产品
+
+        Args:
+            filename: 文件名
+
+        Returns:
+            产品对象列表
+        """
+        filepath = self.processed_dir / filename
+
+        if not filepath.exists():
+            logger.warning(f"JSON file not found: {filepath}")
+            return []
+
+        products = []
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            for row in data:
+                try:
+                    products.append(Product(**row))
+                except (TypeError, ValueError) as e:
+                    logger.warning(f"Failed to parse product: {e}")
+
+        logger.info(f"Loaded {len(products)} products from {filepath}")
+        return products

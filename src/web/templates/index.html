@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2 - 理财产品数据平台</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏦 B2 - 理财产品数据平台</h1>
+            <p class="subtitle">招商银行理财产品净值分析与红利期监控</p>
+        </header>
+
+        <nav class="nav-bar">
+            <a href="/" class="active">产品列表</a>
+            <a href="/bonus-report">红利期报告</a>
+            <a href="#" onclick="location.reload()">刷新数据</a>
+        </nav>
+
+        <!-- 统计卡片 -->
+        <section class="stats-section">
+            <h2>📊 数据概览</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-value">{{ stats.total }}</div>
+                    <div class="stat-label">产品总数</div>
+                </div>
+                {% if stats.avg_net_value %}
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">{{ "%.4f"|format(stats.avg_net_value) }}</div>
+                    <div class="stat-label">平均净值</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value">{{ "%.4f"|format(stats.max_net_value) }}</div>
+                    <div class="stat-label">最高净值</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📉</div>
+                    <div class="stat-value">{{ "%.4f"|format(stats.min_net_value) }}</div>
+                    <div class="stat-label">最低净值</div>
+                </div>
+                {% endif %}
+                <div class="stat-card">
+                    <div class="stat-icon">🔄</div>
+                    <div class="stat-value">{{ stats.data_source }}</div>
+                    <div class="stat-label">数据来源</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 图表展示 -->
+        {% if charts.net_value_trend.exists or charts.bonus_periods.exists or charts.value_distribution.exists %}
+        <section class="charts-section">
+            <h2>📈 图表展示</h2>
+            <div class="charts-grid">
+                {% if charts.net_value_trend.exists %}
+                <div class="chart-card">
+                    <h3>{{ charts.net_value_trend.name }}</h3>
+                    <img src="/charts/net_value_trend.png" alt="净值趋势图" loading="lazy">
+                </div>
+                {% endif %}
+                {% if charts.bonus_periods.exists %}
+                <div class="chart-card">
+                    <h3>{{ charts.bonus_periods.name }}</h3>
+                    <img src="/charts/bonus_periods.png" alt="红利期图表" loading="lazy">
+                </div>
+                {% endif %}
+                {% if charts.value_distribution.exists %}
+                <div class="chart-card">
+                    <h3>{{ charts.value_distribution.name }}</h3>
+                    <img src="/charts/value_distribution.png" alt="净值分布图" loading="lazy">
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- 产品列表 -->
+        <section class="products-section">
+            <div class="section-header">
+                <h2>📋 产品列表</h2>
+                <div class="filters">
+                    <select id="filter-bank" onchange="filterProducts()">
+                        <option value="">所有银行</option>
+                        {% for bank, count in stats.by_bank.items() %}
+                        <option value="{{ bank }}">{{ bank }} ({{ count }})</option>
+                        {% endfor %}
+                    </select>
+                    <select id="filter-status" onchange="filterProducts()">
+                        <option value="">所有状态</option>
+                        {% for status, count in stats.by_status.items() %}
+                        <option value="{{ status }}">{{ status }} ({{ count }})</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" id="min-net" placeholder="最低净值" step="0.01" onchange="filterProducts()">
+                    <input type="number" id="max-net" placeholder="最高净值" step="0.01" onchange="filterProducts()">
+                </div>
+            </div>
+
+            <div class="products-table-container">
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>产品代码</th>
+                            <th>产品名称</th>
+                            <th>银行</th>
+                            <th>净值</th>
+                            <th>状态</th>
+                            <th>风险等级</th>
+                            <th>币种</th>
+                        </tr>
+                    </thead>
+                    <tbody id="products-body">
+                        {% for product in products %}
+                        <tr class="product-row"
+                            data-bank="{{ product.bank or '' }}"
+                            data-status="{{ product.status or '' }}"
+                            data-net="{{ product.net_value or 0 }}">
+                            <td class="code">{{ product.code }}</td>
+                            <td class="name">{{ product.name }}</td>
+                            <td>{{ product.bank or '-' }}</td>
+                            <td class="net-value">
+                                {% if product.net_value %}
+                                {{ "%.4f"|format(product.net_value) }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge {{ product.status|default('unknown') }}">
+                                    {{ product.status or '-' }}
+                                </span>
+                            </td>
+                            <td>{{ product.risk_level or '-' }}</td>
+                            <td>{{ product.currency or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span>共 <strong>{{ products|length }}</strong> 个产品</span>
+                <span class="last-updated">更新时间: {{ last_updated }}</span>
+            </div>
+        </section>
+
+        <footer>
+            <p>B2 理财产品数据平台 | <a href="#" onclick="window.open('https://finprod.paas.cmbchina.com/')">数据来源: 招商银行</a></p>
+        </footer>
+    </div>
+
+    <script>
+        function filterProducts() {
+            const bank = document.getElementById('filter-bank').value;
+            const status = document.getElementById('filter-status').value;
+            const minNet = parseFloat(document.getElementById('min-net').value) || 0;
+            const maxNet = parseFloat(document.getElementById('max-net').value) || Infinity;
+
+            const rows = document.querySelectorAll('.product-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowBank = row.dataset.bank;
+                const rowStatus = row.dataset.status;
+                const rowNet = parseFloat(row.dataset.net);
+
+                const bankMatch = !bank || rowBank === bank;
+                const statusMatch = !status || rowStatus === status;
+                const netMatch = rowNet >= minNet && rowNet <= maxNet;
+
+                if (bankMatch && statusMatch && netMatch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            document.querySelector('.table-footer span strong').textContent = visibleCount;
+        }
+    </script>
+</body>
+</html>
