@@ -110,6 +110,9 @@
                             <th>产品名称</th>
                             <th>银行</th>
                             <th>净值</th>
+                            <th>年化收益率</th>
+                            <th>30天收益</th>
+                            <th>7天收益</th>
                             <th>状态</th>
                             <th>风险等级</th>
                             <th>币种</th>
@@ -127,6 +130,29 @@
                             <td class="net-value">
                                 {% if product.net_value %}
                                 {{ "%.4f"|format(product.net_value) }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="return-value">
+                                {% if product.annualized_return is defined and product.annualized_return is not none %}
+                                <span class="{{ 'positive' if product.annualized_return >= 0 else 'negative' }}">
+                                    {{ "%.2f"|format(product.annualized_return) }}%
+                                </span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="return-value">
+                                {% if product.return_30_days is defined and product.return_30_days is not none %}
+                                {{ "%.2f"|format(product.return_30_days) }}%
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="return-value">
+                                {% if product.return_7_days is defined and product.return_7_days is not none %}
+                                {{ "%.2f"|format(product.return_7_days) }}%
                                 {% else %}
                                 -
                                 {% endif %}

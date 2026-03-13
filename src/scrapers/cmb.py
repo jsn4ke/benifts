@@ -37,10 +37,13 @@ class CMBScraper(BaseScraper):
             try:
                 # 访问页面
                 logger.info(f"访问页面: {self.base_url}")
-                page.goto(self.base_url)
+                page.goto(self.base_url, timeout=30000)
 
-                # 等待表格加载
-                page.wait_for_selector("table", timeout=15000)
+                # 等待页面完全加载
+                page.wait_for_load_state("networkidle", timeout=15000)
+
+                # 等待一段时间让 JavaScript 动态内容加载
+                page.wait_for_timeout(2000)
 
                 # 获取页面内容
                 content = page.content()
@@ -83,47 +86,55 @@ class CMBScraper(BaseScraper):
         soup = BeautifulSoup(html, 'lxml')
         tables = soup.find_all('table')
 
-        if len(tables) < 2:
-            logger.error("未找到产品数据表格")
-            return []
+        logger.info(f"找到 {len(tables)} 个表格")
 
-        # 第二个表格是产品数据
-        table = tables[1]
-        rows = table.find_all('tr')
-
-        if not rows:
-            logger.warning("表格没有数据行")
-            return []
-
+        # 尝试每个表格
         products = []
-        for row in rows[1:]:  # 跳过表头
-            cols = row.find_all('td')
-            if len(cols) >= 16:
-                try:
-                    product = {
-                        "name": cols[0].get_text(strip=True),
-                        "code": cols[1].get_text(strip=True),
-                        "product_type": cols[2].get_text(strip=True),
-                        "sale_type": cols[3].get_text(strip=True),
-                        "fund_type": cols[4].get_text(strip=True),
-                        "issuer": cols[5].get_text(strip=True),
-                        "risk_level": cols[6].get_text(strip=True),
-                        "status": cols[7].get_text(strip=True),
-                        "net_value": self._parse_float(cols[8].get_text(strip=True)),
-                        "currency": cols[9].get_text(strip=True),
-                        "min_amount": self._parse_float(cols[10].get_text(strip=True)),
-                        "investor_scope": cols[11].get_text(strip=True),
-                        "fee_standard": cols[12].get_text(strip=True),
-                        "fee_method": cols[13].get_text(strip=True),
-                        "notice_url": cols[14].get_text(strip=True),
-                        "filing_number": cols[15].get_text(strip=True),
-                    }
-                    products.append(product)
-                except (ValueError, IndexError) as e:
-                    logger.warning(f"解析产品行失败: {e}")
-                    continue
+        for table_idx, table in enumerate(tables):
+            rows = table.find_all('tr')
 
-        logger.info(f"解析成功 {len(products)} 个产品")
+            logger.info(f"表格 {table_idx}: {len(rows)} 行")
+
+            if len(rows) < 2:
+                continue
+
+            # 尝试解析表格
+            for row in rows[1:]:  # 跳过表头
+                cols = row.find_all('td')
+                if len(cols) >= 16:
+                    try:
+                        name = cols[0].get_text(strip=True)
+                        code = cols[1].get_text(strip=True)
+
+                        # 只保留有效产品（有名称和代码）
+                        if name and code and len(code) > 3:
+                            product = {
+                                "name": name,
+                                "code": code,
+                                "product_type": cols[2].get_text(strip=True),
+                                "sale_type": cols[3].get_text(strip=True),
+                                "fund_type": cols[4].get_text(strip=True),
+                                "issuer": cols[5].get_text(strip=True),
+                                "risk_level": cols[6].get_text(strip=True),
+                                "status": cols[7].get_text(strip=True),
+                                "net_value": self._parse_float(cols[8].get_text(strip=True)),
+                                "currency": cols[9].get_text(strip=True),
+                                "min_amount": self._parse_float(cols[10].get_text(strip=True)),
+                                "investor_scope": cols[11].get_text(strip=True),
+                                "fee_standard": cols[12].get_text(strip=True),
+                                "fee_method": cols[13].get_text(strip=True),
+                                "notice_url": cols[14].get_text(strip=True),
+                                "filing_number": cols[15].get_text(strip=True),
+                            }
+                            products.append(product)
+                    except (ValueError, IndexError) as e:
+                        logger.warning(f"解析产品行失败: {e}")
+                        continue
+
+        if not products:
+            logger.error("未找到有效的产品数据")
+        else:
+            logger.info(f"解析成功 {len(products)} 个产品")
         return products
 
     def _parse_float(self, text: str) -> Optional[float]:

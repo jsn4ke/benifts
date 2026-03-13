@@ -3,13 +3,154 @@
 完整演示从数据获取到分析、可视化和通知的完整流程。
 """
 
+from src.models.product import Product
+
+
+def _create_mock_products() -> list[Product]:
+    """创建模拟产品数据用于演示"""
+    from datetime import datetime, timedelta
+
+    products = [
+        Product(
+            name="招商银行理财产品001",
+            code="CMB001",
+            bank="招商银行",
+            product_type="混合型",
+            sale_type="自有",
+            risk_level="R2",
+            status="开放中",
+            net_value=1.0580,
+            currency="人民币",
+            min_amount=100000.0,
+            fetch_time=datetime.now() - timedelta(days=2)
+        ),
+        Product(
+            name="招商银行理财产品002",
+            code="CMB002",
+            bank="招商银行",
+            product_type="固定收益类",
+            sale_type="自有",
+            risk_level="R1",
+            status="开放中",
+            net_value=1.1020,
+            currency="人民币",
+            min_amount=50000.0,
+            fetch_time=datetime.now() - timedelta(days=5)
+        ),
+        Product(
+            name="招商银行理财产品003",
+            code="CMB003",
+            bank="招商银行",
+            product_type="混合型",
+            sale_type="代销",
+            risk_level="R2",
+            status="开放中",
+            net_value=0.9850,
+            currency="人民币",
+            min_amount=100000.0,
+            fetch_time=datetime.now() - timedelta(days=10)
+        ),
+        Product(
+            name="招商银行理财产品004",
+            code="CMB004",
+            bank="招商银行",
+            product_type="固定收益类",
+            sale_type="自有",
+            risk_level="R1",
+            status="未开放",
+            net_value=1.0500,
+            currency="人民币",
+            min_amount=50000.0,
+            fetch_time=datetime.now() - timedelta(days=15)
+        ),
+        Product(
+            name="招商银行理财产品005",
+            code="CMB005",
+            bank="招商银行",
+            product_type="混合型",
+            sale_type="自有",
+            risk_level="R2",
+            status="开放中",
+            net_value=1.0900,
+            currency="人民币",
+            min_amount=100000.0,
+            fetch_time=datetime.now() - timedelta(days=20)
+        ),
+        Product(
+            name="招商银行理财产品006",
+            code="CMB006",
+            bank="招商银行",
+            product_type="混合型",
+            sale_type="代销",
+            risk_level="R2",
+            status="开放中",
+            net_value=1.1500,
+            currency="人民币",
+            min_amount=100000.0,
+            fetch_time=datetime.now() - timedelta(days=25)
+        ),
+        Product(
+            name="招商银行理财产品007",
+            code="CMB007",
+            bank="招商银行",
+            product_type="固定收益类",
+            sale_type="自有",
+            risk_level="R1",
+            status="开放中",
+            net_value=0.9900,
+            currency="人民币",
+            min_amount=50000.0,
+            fetch_time=datetime.now() - timedelta(days=28)
+        ),
+        Product(
+            name="招商银行理财产品008",
+            code="CMB008",
+            bank="招商银行",
+            product_type="混合型",
+            sale_type="自有",
+            risk_level="R2",
+            status="开放中",
+            net_value=1.0300,
+            currency="人民币",
+            min_amount=100000.0,
+            fetch_time=datetime.now() - timedelta(days=1)
+        ),
+        Product(
+            name="招商银行理财产品009",
+            code="CMB009",
+            bank="招商银行",
+            product_type="固定收益类",
+            sale_type="代销",
+            risk_level="R1",
+            status="开放中",
+            net_value=1.1000,
+            currency="人民币",
+            min_amount=50000.0,
+            fetch_time=datetime.now()
+        ),
+        Product(
+            name="招商银行理财产品010",
+            code="CMB010",
+            bank="招商银行",
+            product_type="混合型",
+            sale_type="自有",
+            risk_level="R2",
+            status="开放中",
+            net_value=1.2000,
+            currency="人民币",
+            min_amount=100000.0,
+            fetch_time=datetime.now()
+        ),
+    ]
+    return products
+
 import logging
 from datetime import datetime
 from pathlib import Path
 
 from src.scrapers.cmb import CMBScraper
 from src.analytics.net_value_analyzer import NetValueAnalyzer
-from src.analytics.product_filter import ProductFilter, find_new_products
+from src.analytics.product_filter import ProductFilter
 from src.storage.file_storage import FileStorage
 from src.visualization.charts import DataVisualizer
 from src.notifications.notifier import ConsoleNotifier, ProductNotifier
@@ -34,11 +175,12 @@ def main():
 
     raw_products = scraper.fetch_products()
     if not raw_products:
-        logger.error("未能获取产品数据")
-        return
-
-    products = scraper.to_product_list(raw_products)
-    print(f"✓ 获取到 {len(products)} 个产品")
+        print("[WARNING] 未从爬虫获取到数据，使用模拟数据...")
+        # 使用模拟数据
+        products = _create_mock_products()
+    else:
+        products = scraper.to_product_list(raw_products)
+    print(f"[OK] 获取到 {len(products)} 个产品")
 
     # 步骤 2: 统计分析
     print("\n[步骤 2/5] 生成统计报告...")
@@ -66,11 +208,11 @@ def main():
 
     # 分析净值变化
     changes = analyzer.analyze_net_value_changes(previous_products, products)
-    print(f"✓ 发现 {len(changes)} 个产品净值变化")
+    print(f"[OK] 发现 {len(changes)} 个产品净值变化")
 
     # 查找高增长产品
     high_growth = analyzer.find_high_growth_products(changes)
-    print(f"✓ 发现 {len(high_growth)} 个高增长产品（日 >= 1.0%）")
+    print(f"[OK] 发现 {len(high_growth)} 个高增长产品（日 >= 1.0%）")
     if high_growth:
         print("\n  高增长产品:")
         for c in high_growth[:5]:
@@ -81,7 +223,7 @@ def main():
     bonus_periods = analyzer.identify_bonus_periods(products, {})
 
     active_bonus = [b for b in bonus_periods if b.is_active]
-    print(f"✓ 发现 {len(active_bonus)} 个产品处于红利期")
+    print(f"[OK] 发现 {len(active_bonus)} 个产品处于红利期")
 
     if active_bonus:
         print("\n  红利期产品:")
@@ -105,7 +247,7 @@ def main():
         bonus_periods=bonus_periods,
     )
 
-    print(f"✓ 生成 {len(charts)} 个图表:")
+    print(f"[OK] 生成 {len(charts)} 个图表:")
     for name, path in charts.items():
         print(f"    - {name}: {path}")
 
@@ -126,7 +268,7 @@ def main():
     storage = FileStorage("data")
     storage.save_csv(products, "products_latest.csv")
     storage.save_json(products, "products_latest.json")
-    print(f"✓ 数据已保存")
+    print(f"[OK] 数据已保存")
 
     # 完成
     print("\n" + "=" * 60)

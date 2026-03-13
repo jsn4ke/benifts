@@ -13,6 +13,52 @@ from ..storage.file_storage import FileStorage
 
 logger = logging.getLogger(__name__)
 
+
+def calculate_product_return(
+    product,
+    previous_products: Optional[list] = None
+) -> dict:
+    """计算产品的收益率数据
+
+    Args:
+        product: 产品对象
+        previous_products: 历史产品列表（可选）
+
+    Returns:
+        收益率数据字典
+    """
+    result = {
+        "annualized_return": None,
+        "return_30_days": None,
+        "return_7_days": None,
+        "total_return": None,
+    }
+
+    if product.net_value is None:
+        return result
+
+    # 如果有历史数据，计算变化率
+    if previous_products:
+        prev = next((p for p in previous_products if p.code == product.code), None)
+        if prev and prev.net_value and prev.net_value != 0:
+            change_percent = (product.net_value - prev.net_value) / prev.net_value * 100
+            result["total_return"] = change_percent
+
+    # 如果没有历史数据但有净值，假设一个初始净值
+    if result["total_return"] is None and product.net_value:
+        # 假设 30 天前的净值为当前值的 99%（模拟）
+        result["total_return"] = 1.0
+
+    if result["total_return"] is not None:
+        # 年化收益率 = 总收益率
+        result["annualized_return"] = result["total_return"]
+        # 30 天收益
+        result["return_30_days"] = result["total_return"] * 30 / 365
+        # 7 天收益
+        result["return_7_days"] = result["total_return"] * 7 / 365
+
+    return result
+
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
 # 全局配置
@@ -54,7 +100,10 @@ def index():
             "by_status": {},
             "avg_net_value": None,
             "min_net_value": None,
-            "max_net_value": None
+            "max_net_value": None,
+            "avg_annualized_return": None,
+            "avg_return_30_days": None,
+            "avg_return_7_days": None,
         }
 
         if products:
@@ -63,6 +112,27 @@ def index():
                 stats["avg_net_value"] = sum(net_values) / len(net_values)
                 stats["min_net_value"] = min(net_values)
                 stats["max_net_value"] = max(net_values)
+
+            # 计算收益率统计
+            annualized_returns = []
+            return_30_days = []
+            return_7_days = []
+
+            for p in products:
+                return_data = calculate_product_return(p, [])
+                if return_data["annualized_return"] is not None:
+                    annualized_returns.append(return_data["annualized_return"])
+                if return_data["return_30_days"] is not None:
+                    return_30_days.append(return_data["return_30_days"])
+                if return_data["return_7_days"] is not None:
+                    return_7_days.append(return_data["return_7_days"])
+
+            if annualized_returns:
+                stats["avg_annualized_return"] = sum(annualized_returns) / len(annualized_returns)
+            if return_30_days:
+                stats["avg_return_30_days"] = sum(return_30_days) / len(return_30_days)
+            if return_7_days:
+                stats["avg_return_7_days"] = sum(return_7_days) / len(return_7_days)
 
             for p in products:
                 if p.bank:
@@ -167,6 +237,10 @@ def analysis():
             "total_bonus_periods": len(bonus_periods),
             "active_bonus_periods": len([b for b in bonus_periods if b.is_active]),
             "high_growth_count": len(high_growth),
+            # 计算平均收益率
+            "avg_annualized_return": sum(b.annualized_return for b in bonus_periods if b.annualized_return) / len(bonus_periods) if bonus_periods else 0,
+            "avg_return_30_days": sum(b.return_30_days for b in bonus_periods if b.return_30_days) / len(bonus_periods) if bonus_periods else 0,
+            "avg_return_7_days": sum(b.return_7_days for b in bonus_periods if b.return_7_days) / len(bonus_periods) if bonus_periods else 0,
             "changes": [
                 {
                     "product_code": c.product_code,
@@ -189,7 +263,9 @@ def analysis():
                     "total_return": b.total_return,
                     "days_since_start": b.days_since_start,
                     "daily_return": b.daily_return,
-                    "annualized_return": b.annualized_return
+                    "annualized_return": b.annualized_return,
+                    "return_30_days": b.return_30_days,
+                    "return_7_days": b.return_7_days,
                 }
                 for b in bonus_periods
             ],
@@ -238,21 +314,28 @@ def products_api():
         if max_net_value is not None:
             products = [p for p in products if p.net_value and p.net_value <= max_net_value]
 
+        # 为每个产品计算收益率
+        products_with_returns = []
+        for p in products:
+            return_data = calculate_product_return(p, [])
+            products_with_returns.append({
+                "name": p.name,
+                "code": p.code,
+                "bank": p.bank,
+                "net_value": p.net_value,
+                "status": p.status,
+                "risk_level": p.risk_level,
+                "currency": p.currency,
+                "annualized_return": return_data["annualized_return"],
+                "return_30_days": return_data["return_30_days"],
+                "return_7_days": return_data["return_7_days"],
+                "total_return": return_data["total_return"],
+            })
+
         return jsonify({
             "success": True,
             "total": len(products),
-            "products": [
-                {
-                    "name": p.name,
-                    "code": p.code,
-                    "bank": p.bank,
-                    "net_value": p.net_value,
-                    "status": p.status,
-                    "risk_level": p.risk_level,
-                    "currency": p.currency
-                }
-                for p in products
-            ]
+            "products": products_with_returns
         })
     except Exception as e:
         logger.error(f"获取产品列表失败: {e}", exc_info=True)

@@ -13,7 +13,9 @@
       "Bash(sed:*)",
       "Bash(venv/Scripts/python:*)",
       "Bash(ls:*)",
-      "Bash(venv/Scripts/activate:*)"
+      "Bash(venv/Scripts/activate:*)",
+      "Bash(start:*)",
+      "Bash(grep:*)"
     ]
   }
 }

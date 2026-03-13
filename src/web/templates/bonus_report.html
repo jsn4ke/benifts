@@ -148,6 +148,18 @@
                         <div class="analysis-stat-value">${data.active_bonus_periods}</div>
                         <div class="analysis-stat-label">活跃红利期</div>
                     </div>
+                    <div class="analysis-stat">
+                        <div class="analysis-stat-value">${data.avg_annualized_return ? data.avg_annualized_return.toFixed(2) + '%' : '-'}</div>
+                        <div class="analysis-stat-label">平均年化收益</div>
+                    </div>
+                    <div class="analysis-stat">
+                        <div class="analysis-stat-value">${data.avg_return_30_days ? data.avg_return_30_days.toFixed(2) + '%' : '-'}</div>
+                        <div class="analysis-stat-label">平均30天收益</div>
+                    </div>
+                    <div class="analysis-stat">
+                        <div class="analysis-stat-value">${data.avg_return_7_days ? data.avg_return_7_days.toFixed(2) + '%' : '-'}</div>
+                        <div class="analysis-stat-label">平均7天收益</div>
+                    </div>
                 </div>
             `;
 
@@ -211,8 +223,19 @@
                                     <td class="${b.total_return >= 0 ? 'positive' : 'negative'}">
                                         ${b.total_return >= 0 ? '+' : ''}${b.total_return.toFixed(2)}%
                                     </td>
-                                    <td>${b.daily_return.toFixed(4)}%</td>
-                                    <td>${b.annualized_return.toFixed(2)}%</td>
+                                    <td class="return-value">
+                                        <span class="${b.return_30_days and b.return_30_days >= 0 ? 'positive' : 'negative'}">
+                                            ${b.return_30_days and b.return_30_days ? b.return_30_days.toFixed(2) + '%' : '-'}%
+                                        </span>
+                                    </td>
+                                    <td class="return-value">
+                                        <span class="${b.return_7_days and b.return_7_days >= 0 ? 'positive' : 'negative'}">
+                                            ${b.return_7_days and b.return_7_days ? b.return_7_days.toFixed(2) + '%' : '-'}%
+                                        </span>
+                                    </td>
+                                    <td class="${b.annualized_return >= 0 ? 'positive' : 'negative'}">
+                                        ${b.annualized_return.toFixed(2)}%
+                                    </td>
                                     <td>${b.days_since_start}天</td>
                                 </tr>
                             `).join('')}

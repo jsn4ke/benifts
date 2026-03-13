@@ -55,6 +55,22 @@ class BonusPeriod:
         # 允许负收益的年化计算
         return ((1 + self.total_return / 100) ** (DAYS_PER_YEAR / self.days_since_start) - 1) * 100
 
+    @property
+    def return_30_days(self) -> float:
+        """30天收益（基于年化收益率换算）"""
+        if self.days_since_start == 0:
+            return 0.0
+        # 计算30天的预期收益
+        return self.annualized_return / 365 * 30
+
+    @property
+    def return_7_days(self) -> float:
+        """7天收益（基于年化收益率换算）"""
+        if self.days_since_start == 0:
+            return 0.0
+        # 计算7天的预期收益
+        return self.annualized_return / 365 * 7
+
 
 class NetValueAnalyzer:
     """净值分析器
